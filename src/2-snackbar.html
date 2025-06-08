@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Генератор промісів</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <p><a href="./index.html">На головну</a></p>
+      <h1>Генератор промісів ⏳</h1>
+      <form class="form">
+        <label class="form-label">
+          Delay (ms)
+          <input type="number" name="delay" required min="0" />
+        </label>
+
+        <fieldset class="form-fieldset">
+          <legend>State</legend>
+          <label class="form-label-radio">
+            <input type="radio" name="state" value="fulfilled" required />
+            Fulfilled
+          </label>
+          <label class="form-label-radio">
+            <input type="radio" name="state" value="rejected" required />
+            Rejected
+          </label>
+        </fieldset>
+
+        <button type="submit">Create notification</button>
+      </form>
+    </div>
+    <script src="./js/2-snackbar.js" type="module"></script>
+  </body>
+</html>

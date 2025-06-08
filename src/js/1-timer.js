@@ -1,100 +1,91 @@
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.min.css"; 
-import iziToast from "izitoast";
-import "izitoast/dist/css/iziToast.min.css"; 
+import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr/dist/esm/index.js";
+import iziToast from "https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js";
+import "https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css";
 
-const datetimePicker = document.getElementById('datetime-picker');
-const startButton = document.querySelector('[data-start]');
-const daysSpan = document.querySelector('[data-days]');
-const hoursSpan = document.querySelector('[data-hours]');
-const minutesSpan = document.querySelector('[data-minutes]');
-const secondsSpan = document.querySelector('[data-seconds]');
 
-let userSelectedDate = null; 
-let timerId = null; 
-
-startButton.disabled = true;
-
-const options = {
-    enableTime: true,    
-    time_24hr: true,     
-    defaultDate: new Date(), 
-    minuteIncrement: 1,  
-    onClose(selectedDates) { 
-        const selectedDate = selectedDates[0];
-        const now = new Date();
-
-        if (selectedDate <= now) {
-            iziToast.error({
-                title: 'Помилка',
-                message: 'Будь ласка, виберіть дату в майбутньому!',
-                position: 'topRight',
-                timeout: 3000, 
-            });
-            startButton.disabled = true; 
-            userSelectedDate = null;     
-        } else {
-            userSelectedDate = selectedDate; 
-            startButton.disabled = false;    
-           
-        }
-    },
+const refs = {
+  startBtn: document.querySelector('[data-start]'),
+  input: document.querySelector('#datetime-picker'),
+  days: document.querySelector('[data-days]'),
+  hours: document.querySelector('[data-hours]'),
+  minutes: document.querySelector('[data-minutes]'),
+  seconds: document.querySelector('[data-seconds]'),
 };
 
+let userSelectedDate = null;
+let timerId = null;
 
-flatpickr(datetimePicker, options);
 
-function convertMs(ms) {
-    const second = 1000;
-    const minute = second * 60;
-    const hour = minute * 60;
-    const day = hour * 24;
+const options = {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    const now = new Date();
+    if (selectedDates[0] <= now) {
+      iziToast.error({
+        title: 'Error',
+        message: 'Please choose a date in the future',
+        position: 'topRight',
+      });
+      refs.startBtn.disabled = true;
+    } else {
+      userSelectedDate = selectedDates[0];
+      refs.startBtn.disabled = false;
+    }
+  },
+};
 
-    const days = Math.floor(ms / day);
-    const hours = Math.floor((ms % day) / hour);
-    const minutes = Math.floor(((ms % day) % hour) / minute);
-    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+flatpickr(refs.input, options);
 
-    return { days, hours, minutes, seconds };
+
+refs.startBtn.addEventListener('click', () => {
+  if (!userSelectedDate) return;
+
+  refs.startBtn.disabled = true;
+  refs.input.disabled = true;
+
+  timerId = setInterval(() => {
+    const now = new Date();
+    const delta = userSelectedDate - now;
+
+    if (delta <= 0) {
+      clearInterval(timerId);
+      updateTimer(0);
+      refs.input.disabled = false;
+      return;
+    }
+
+    updateTimer(delta);
+  }, 1000);
+});
+
+
+function updateTimer(ms) {
+  const time = convertMs(ms);
+  refs.days.textContent = time.days;
+  refs.hours.textContent = addLeadingZero(time.hours);
+  refs.minutes.textContent = addLeadingZero(time.minutes);
+  refs.seconds.textContent = addLeadingZero(time.seconds);
 }
+
 
 function addLeadingZero(value) {
-    return String(value).padStart(2, "0");
+  return String(value).padStart(2, '0');
 }
 
-function updateTimerDisplay({ days, hours, minutes, seconds }) {
-    daysSpan.textContent = addLeadingZero(days);
-    hoursSpan.textContent = addLeadingZero(hours);
-    minutesSpan.textContent = addLeadingZero(minutes);
-    secondsSpan.textContent = addLeadingZero(seconds);
+
+function convertMs(ms) {
+  const second = 1000;
+  const minute = second * 60;
+  const hour = minute * 60;
+  const day = hour * 24;
+
+  const days = Math.floor(ms / day);
+  const hours = Math.floor((ms % day) / hour);
+  const minutes = Math.floor((ms % hour) / minute);
+  const seconds = Math.floor((ms % minute) / second);
+
+  return { days, hours, minutes, seconds };
 }
-
-function startTimer() {
-    if (!userSelectedDate) return; 
-
-    startButton.disabled = true;    
-    datetimePicker.disabled = true;
-
-    timerId = setInterval(() => {
-        const now = new Date();
-        const timeDifference = userSelectedDate - now; 
-
-        if (timeDifference <= 0) {
-            clearInterval(timerId); 
-            updateTimerDisplay({ days: 0, hours: 0, minutes: 0, seconds: 0 }); 
-            datetimePicker.disabled = false; 
-           
-            iziToast.info({
-                title: 'Завершено',
-                message: 'Відлік часу закінчився!',
-                position: 'topRight',
-            });
-            return;
-        }
-
-        const time = convertMs(timeDifference);
-        updateTimerDisplay(time);
-    }, 1000);
-}
-
-startButton.addEventListener('click', startTimer);

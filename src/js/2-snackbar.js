@@ -1,35 +1,42 @@
-import iziToast from 'izitoast';
-import 'izitoast/dist/css/iziToast.min.css';
+import iziToast from "https://cdn.jsdelivr.net/npm/izitoast/dist/js/iziToast.min.js";
+import "https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css";
 
 const form = document.querySelector('.form');
 
-form.addEventListener('submit', event => {
-  event.preventDefault();
+form.addEventListener('submit', e => {
+  e.preventDefault();
 
-  const delay = parseInt(form.elements.delay.value);
-  const state = form.elements.state.value;
+  const formData = new FormData(form);
+  const delay = Number(formData.get('delay'));
+  const state = formData.get('state');
 
-  const promise = new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (state === 'fulfilled') {
-        resolve(delay);
-      } else {
-        reject(delay);
-      }
-    }, delay);
-  });
-
-  promise
-    .then(delay => {
+  createPromise(delay, state)
+    .then(resultDelay => {
       iziToast.success({
+        title: '✅ Fulfilled',
+        message: `Fulfilled promise in ${resultDelay}ms`,
         position: 'topRight',
-        message: `✅ Fulfilled promise in ${delay}ms`,
       });
     })
-    .catch(delay => {
+    .catch(resultDelay => {
       iziToast.error({
+        title: '❌ Rejected',
+        message: `Rejected promise in ${resultDelay}ms`,
         position: 'topRight',
-        message: `❌ Rejected promise in ${delay}ms`,
       });
     });
 });
+
+/**
+ * Створює проміс, який виконується або відхиляється через delay мс
+ * @param {number} delay
+ * @param {'fulfilled' | 'rejected'} state
+ * @returns {Promise<number>}
+ */
+function createPromise(delay, state) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      state === 'fulfilled' ? resolve(delay) : reject(delay);
+    }, delay);
+  });
+}
